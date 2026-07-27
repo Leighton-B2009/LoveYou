@@ -34,6 +34,7 @@
 <canvas id="heart"></canvas>
 
 <script>
+
 const canvas = document.getElementById("heart");
 const ctx = canvas.getContext("2d");
 
@@ -42,11 +43,17 @@ let height;
 let points = [];
 
 const TEXT = "I love you";
-const AMOUNT = 1200;
+
+// Number of words around the heart
+const AMOUNT = 170;
+
+// Change this to make the text bigger/smaller
+const TEXT_SIZE = 11;
 
 function heart(t) {
     return {
         x: 16 * Math.pow(Math.sin(t), 3),
+
         y:
             13 * Math.cos(t) -
             5 * Math.cos(2 * t) -
@@ -56,7 +63,12 @@ function heart(t) {
 }
 
 function resize() {
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+    const dpr =
+        Math.min(
+            window.devicePixelRatio || 1,
+            2
+        );
 
     width = window.innerWidth;
     height = window.innerHeight;
@@ -67,94 +79,207 @@ function resize() {
     canvas.style.width = width + "px";
     canvas.style.height = height + "px";
 
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
 
     createHeart();
 }
 
 function createHeart() {
+
     points = [];
 
     for (let i = 0; i < AMOUNT; i++) {
-        const t = Math.random() * Math.PI * 2;
+
+        /*
+        Spread the words evenly around
+        the OUTLINE of the heart.
+        */
+
+        const t =
+            (i / AMOUNT) *
+            Math.PI *
+            2;
+
         const p = heart(t);
 
-        // Fills the inside of the heart
-        const fill = Math.sqrt(Math.random());
-
         points.push({
-            hx: p.x * fill,
-            hy: p.y * fill,
 
-            startX: Math.random() * width,
-            startY: Math.random() * height,
+            hx: p.x,
+            hy: p.y,
 
-            delay: Math.random() * 1400,
-            duration: 700 + Math.random() * 900,
+            /*
+            Words begin scattered
+            around the screen.
+            */
 
-            brightness: Math.random()
+            startX:
+                Math.random() *
+                width,
+
+            startY:
+                Math.random() *
+                height,
+
+            /*
+            Makes them arrive at
+            slightly different times.
+            */
+
+            delay:
+                Math.random() *
+                1200,
+
+            duration:
+                700 +
+                Math.random() *
+                900,
+
+            brightness:
+                Math.random()
         });
     }
 }
 
 function easeOutCubic(x) {
-    return 1 - Math.pow(1 - x, 3);
+
+    return (
+        1 -
+        Math.pow(
+            1 - x,
+            3
+        )
+    );
 }
 
-let startTime = performance.now();
+let startTime =
+    performance.now();
 
 function animate(time) {
 
+    // Clear screen
+
     ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, width, height);
 
-    const elapsed = time - startTime;
-
-    // Makes heart large while still fitting phone screen
-    const scale = Math.min(
-        width / 36,
-        height / 34
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
     );
 
-    const centerX = width / 2;
-    const centerY = height / 2;
+    const elapsed =
+        time - startTime;
 
-    // Heartbeat
+    /*
+    HEART SIZE
+
+    Change 35 to a SMALLER number
+    to make the heart BIGGER.
+    */
+
+    const scale =
+        Math.min(
+            width / 35,
+            height / 34
+        );
+
+    const centerX =
+        width / 2;
+
+    const centerY =
+        height / 2;
+
+    // --------------------
+    // HEARTBEAT
+    // --------------------
+
     let pulse = 1;
 
-    if (elapsed > 2300) {
-        const beat = Math.sin(elapsed * 0.005);
+    if (elapsed > 2200) {
+
+        const beat =
+            Math.sin(
+                elapsed *
+                0.005
+            );
 
         pulse =
             1 +
             Math.pow(
-                Math.max(0, beat),
+                Math.max(
+                    0,
+                    beat
+                ),
                 10
-            ) * 0.04;
+            ) *
+            0.035;
     }
 
-    // Responsive text size
-    const fontSize = Math.max(
-        6,
-        Math.min(width, height) * 0.013
-    );
+    // --------------------
+    // TEXT
+    // --------------------
 
-    ctx.font = `bold ${fontSize}px Arial, sans-serif`;
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    for (const point of points) {
-
-        let progress =
-            (elapsed - point.delay) /
-            point.duration;
-
-        progress = Math.max(
-            0,
-            Math.min(1, progress)
+    const fontSize =
+        Math.max(
+            8,
+            Math.min(
+                TEXT_SIZE,
+                width * 0.027
+            )
         );
 
-        const eased = easeOutCubic(progress);
+    ctx.font =
+        `bold ${fontSize}px Arial, sans-serif`;
+
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "middle";
+
+    // --------------------
+    // DRAW HEART
+    // --------------------
+
+    for (
+        const point
+        of points
+    ) {
+
+        let progress =
+            (
+                elapsed -
+                point.delay
+            ) /
+            point.duration;
+
+        progress =
+            Math.max(
+                0,
+                Math.min(
+                    1,
+                    progress
+                )
+            );
+
+        const eased =
+            easeOutCubic(
+                progress
+            );
+
+        /*
+        Because hx/hy are NOT
+        multiplied by a random
+        fill value, every word
+        stays on the OUTSIDE edge.
+        */
 
         const finalX =
             centerX +
@@ -168,40 +293,86 @@ function animate(time) {
             scale *
             pulse;
 
+        // Fly towards heart
+
         const x =
             point.startX +
-            (finalX - point.startX) *
+            (
+                finalX -
+                point.startX
+            ) *
             eased;
 
         const y =
             point.startY +
-            (finalY - point.startY) *
+            (
+                finalY -
+                point.startY
+            ) *
             eased;
 
-        ctx.globalAlpha = progress;
+        // Fade in
 
-        if (point.brightness > 0.96) {
-            ctx.fillStyle = "#ffffff";
+        ctx.globalAlpha =
+            progress;
+
+        // Pink shades
+
+        if (
+            point.brightness >
+            0.96
+        ) {
+
+            ctx.fillStyle =
+                "#ffd4e8";
+
         }
-        else if (point.brightness > 0.80) {
-            ctx.fillStyle = "#ff8fc1";
+
+        else if (
+            point.brightness >
+            0.75
+        ) {
+
+            ctx.fillStyle =
+                "#ff82b8";
+
         }
+
         else {
-            ctx.fillStyle = "#ff4f9a";
+
+            ctx.fillStyle =
+                "#ff3f91";
         }
 
-        ctx.fillText(TEXT, x, y);
+        ctx.fillText(
+            TEXT,
+            x,
+            y
+        );
     }
 
     ctx.globalAlpha = 1;
 
-    requestAnimationFrame(animate);
+    requestAnimationFrame(
+        animate
+    );
 }
 
-window.addEventListener("resize", resize);
+// Resize support
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+// Start
 
 resize();
-requestAnimationFrame(animate);
+
+requestAnimationFrame(
+    animate
+);
+
 </script>
 
 </body>
